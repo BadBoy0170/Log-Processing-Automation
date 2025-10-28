@@ -6,9 +6,9 @@ The script automates the analysis by:
 1.  Parsing raw text logs into a structured format.
 2.  Running a SQL query to identify **operational patterns** (e.g., status code counts).
 3.  Running a second SQL query to detect **anomalies** (e.g., IPs generating the most errors), which simulates reducing manual review time.
-4.  Exporting the results to CSV files for visualization in **Tableau**.
+4.  Exporting the results to CSV files for visualization in **Power BI**.
 
-**Technologies:** Python, PySpark, SQL, Tableau
+**Technologies:** Python, PySpark, SQL, Power BI
 
 ---
 
@@ -18,20 +18,39 @@ The script automates the analysis by:
 
 This project requires a sample Apache log file.
 
-1.  Go to this link (a great source for sample log data): [https://www.kaggle.com/datasets/elikplim/apache-log](https://www.kaggle.com/datasets/elikplim/apache-log)
-2.  Download the `apache_logs.txt` file.
-3.  Rename the file to `sample_logs.log` and place it in the same directory as the `process_logs.py` script.
-
-### Step 2: Install Libraries
-
-You only need `pyspark` and `pandas`.
-*(Note: `pyspark` requires a Java 8 or 11 environment to run. Most Macs have this, but if you get a Java error, you may need to install it.)*
+To download a sample Apache log file, run the following command in your terminal:
 
 ```bash
-pip3 install pyspark pandas
+curl -o sample_logs.log https://raw.githubusercontent.com/elastic/examples/master/Common%20Data%20Formats/apache_logs/apache_logs
 ```
 
-### Step 3: Run the Script
+Place the `sample_logs.log` file in the same directory as the `process_logs.py` script.
+
+### Step 2: Setup Environment Variables (Optional)
+
+You can configure the log file name and the regex pattern using environment variables. If not set, default values will be used.
+
+*   `LOG_FILE`: The name of the log file to process (default: `sample_logs.log`).
+*   `LOG_REGEX`: The regular expression pattern to parse the log entries (default: `(\S+) (\S+) (\S+) \[(.*?)\] "(\S+ .*?)" (\d{3}) (\S+)`).
+
+Example of setting environment variables:
+
+```bash
+export LOG_FILE="my_custom_logs.log"
+export LOG_REGEX="your_custom_regex_pattern"
+```
+
+### Step 3: Set up Virtual Environment and Install Libraries
+
+It's recommended to use a virtual environment to manage dependencies.
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install pyspark pandas
+```
+
+### Step 4: Run the Script
 
 Run the script from your terminal:
 
@@ -40,53 +59,50 @@ python3 process_logs.py
 ```
 
 This will run a local Spark job and create two new files:
-* `operational_patterns.csv`
-* `ip_anomalies.csv`
+*   `operational_patterns.csv`
+*   `ip_anomalies.csv`
 
 ---
 
-## 📊 Tableau Visualization Guide
+## 📊 Power BI Visualization Guide
 
 Here is how to create the visualizations.
 
-1.  Open Tableau. On the "Connect" pane, click **"Text File"** and select `operational_patterns.csv`.
-2.  The data will load. At the top of the "Data Source" screen, click the **"Add"** button (next to Connections).
-3.  Click **"Text File"** again and select `ip_anomalies.csv`.
-4.  Tableau will load both files. (You don't need to join them, just have them both available in the Data pane).
-5.  Click on a new worksheet.
+1.  Open Power BI Desktop.
+2.  Click **"Get data"** -> **"Text/CSV"** and select `operational_patterns.csv`.
+3.  Load the data.
+4.  Repeat the process: Click **"Get data"** -> **"Text/CSV"** and select `ip_anomalies.csv`.
+5.  Load the data. (You don't need to join them, just have them both available in the Fields pane).
 
 ### Visual 1: Operational Patterns (Pie Chart)
 
-1.  In the "Data" pane, make sure `operational_patterns.csv` is selected.
-2.  Change the Mark type from "Automatic" to **"Pie"**.
-3.  Drag `Status Code` (from Dimensions) to the **Color** card.
-4.  Drag `Count` (from Measures) to the **Angle** card.
-5.  Drag `Count` and `Status Code` to the **Label** card to see the values.
-
-
+1.  Go to the "Report" view.
+2.  Select the **Pie chart** visualization.
+3.  From the `operational_patterns` table, drag `status_code` to the **Legend** field.
+4.  Drag `count` to the **Values** field.
+5.  You can customize the labels and title as needed.
 
 ### Visual 2: Anomaly Detection (Bar Chart)
 
-1.  Create a new worksheet.
-2.  In the "Data" pane, select the `ip_anomalies.csv` data source.
-3.  Drag `Ip` (from Dimensions) to the **Rows** shelf.
-4.  Drag `Error Count` (from Measures) to the **Columns** shelf.
-5.  Click the sort icon on the X-axis to sort from highest to lowest.
-6.  **To show just the Top 10:** Drag `Ip` (from Dimensions) onto the **Filters** card.
-7.  In the filter box, go to the **"Top"** tab. Select **"By field"** and set it to: **Top 10 by Error Count (Sum)**.
-8.  Click OK. This chart now shows the 10 most problematic IPs.
-
-
+1.  Create a new page in the report.
+2.  Select the **Clustered bar chart** visualization.
+3.  From the `ip_anomalies` table, drag `ip` to the **Axis** field.
+4.  Drag `error_count` to the **Values** field.
+5.  To show just the Top 10:
+    *   Click on the `ip` field in the "Visualizations" pane, then select **"Filters"**.
+    *   Under "Filter type", select **"Top N"**.
+    *   Set "Show items" to **"Top"** and value to **10**.
+    *   Drag `error_count` to the "By value" field.
+    *   Click **"Apply filter"**.
 
 ### Visual 3: KPI Cards
 
-Tableau doesn't have a "Card" visual like Power BI, but you can make one easily.
-
-1.  Create a new worksheet.
-2.  Drag `Count` (from `operational_patterns.csv`) to the **Text** card.
-3.  Drag `Status Code` to the **Filters** card.
-4.  In the filter box, select **"404"** and click OK.
-5.  The sheet will now just show a large number: the total count for 404 errors.
-6.  Click the worksheet title and rename it "Total 404 Errors".
-7.  Repeat this process on a new sheet for "500" errors.
-8.  Finally, create a new **Dashboard** and drag all your new sheets onto it.
+1.  Create a new page in the report.
+2.  Select the **Card** visualization.
+3.  From the `operational_patterns` table, drag `count` to the **Fields** well.
+4.  To display specific error counts (e.g., 404 errors):
+    *   Drag `status_code` from `operational_patterns` to the **Filters on this visual** pane.
+    *   Select **"404"** as the filter value.
+5.  Rename the card title (e.g., "Total 404 Errors").
+6.  Repeat this process for other status codes (e.g., "500" errors) on new Card visualizations.
+7.  Finally, create a new **Dashboard** and arrange your visuals as desired.

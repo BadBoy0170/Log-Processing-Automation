@@ -3,10 +3,10 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, regexp_extract
 
 # --- Configuration ---
-LOG_FILE = "sample_logs.log"
+LOG_FILE = os.getenv("LOG_FILE", "sample_logs.log")
 # This RegEx pattern captures the IP address (group 1) and the status code (group 8)
 # Format: 1.2.3.4 - - [timestamp] "GET /request" STATUS_CODE ...
-LOG_REGEX = r'(\S+) (\S+) (\S+) \[(.*?)\] "(\S+ .*?)" (\d{3}) (\S+)'
+LOG_REGEX = os.getenv("LOG_REGEX", r'(\S+) (\S+) (\S+) \[(.*?)\] "(\S+ .*?)" (\d{3}) (\S+)')
 # ---
 
 def process_logs():
